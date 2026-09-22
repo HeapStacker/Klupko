@@ -8,12 +8,10 @@ if is_plat("windows", "mingw") then
     add_cxflags("/utf-8", "/Zc:__cplusplus")
 end
 
-add_requires("glfw")
-add_requires("imgui", {configs = {glfw = true, opengl3 = true}})
-add_requires("imnodes")
-add_requires("lemon")
-add_requires("tracy")
+add_requires("conan::tracy/0.13.1")
 add_requires("hwinfo")
+add_requires("conan::coin-lemon/1.3.1")
+add_requires("raylib")
 
 target("graph-tutorial")
     set_kind("binary")
@@ -21,4 +19,4 @@ target("graph-tutorial")
     add_files("src/graphs/**.cpp")
     add_includedirs("src/graphs")
 
-    add_packages("lemon", "hwinfo", "glfw", "imgui", "imnodes", "tracy")
+    add_packages("conan::coin-lemon/1.3.1", "raylib", "conan::tracy/0.13.1")

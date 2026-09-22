@@ -1,2 +1,2 @@
 CompileFlags:
-  CompilationDatabase: .vscode/compile_commands.json
+  CompilationDatabase: .vscode

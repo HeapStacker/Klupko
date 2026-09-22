@@ -1,0 +1,179 @@
+#include <iostream>
+#include <string>
+#include <vector>
+
+// LEMON Graph Library
+#include <lemon/list_graph.h>
+#include <lemon/smart_graph.h>
+#include <lemon/static_graph.h>
+
+// Dear ImGui & imnodes
+#include <imgui.h>
+#include <imnodes.h>
+
+using namespace lemon;
+
+// ============================================================================
+// 1. OSNOVNE STRUKTURE ZA DINAMIČKI GRAF (ListDigraph)
+// ============================================================================
+
+struct DeliveryNetwork {
+    ListDigraph graph;
+
+    // Node maps
+    ListDigraph::NodeMap<std::string> nodeName;
+    ListDigraph::NodeMap<ImVec2> nodePos;
+
+    // Arc maps
+    ListDigraph::ArcMap<double> arcWeight;   // Udaljenost ili vrijeme
+    ListDigraph::ArcMap<bool> isSymmetric;  // true = dvosmjerna/simetrična, false = usmjerena
+
+    // Konstruktor za inicijalizaciju mapa
+    DeliveryNetwork() 
+        : nodeName(graph), 
+          nodePos(graph), 
+          arcWeight(graph), 
+          isSymmetric(graph) {}
+
+    // Pomoćna funkcija za dodavanje čvora
+    ListDigraph::Node addLocation(const std::string& name, ImVec2 pos) {
+        ListDigraph::Node u = graph.addNode();
+        nodeName[u] = name;
+        nodePos[u] = pos;
+        return u;
+    }
+
+    // Pomoćna funkcija za dodavanje jednosmjerne ulice
+    ListDigraph::Arc addOneWayRoad(ListDigraph::Node u, ListDigraph::Node v, double weight) {
+        ListDigraph::Arc a = graph.addArc(u, v);
+        arcWeight[a] = weight;
+        isSymmetric[a] = false;
+        return a;
+    }
+
+    // Pomoćna funkcija za dodavanje dvosmjerne / simetrične ceste
+    std::pair<ListDigraph::Arc, ListDigraph::Arc> addTwoWayRoad(ListDigraph::Node u, ListDigraph::Node v, double weight) {
+        ListDigraph::Arc a1 = graph.addArc(u, v);
+        ListDigraph::Arc a2 = graph.addArc(v, u);
+
+        arcWeight[a1] = weight;
+        arcWeight[a2] = weight;
+
+        isSymmetric[a1] = true;
+        isSymmetric[a2] = true;
+
+        return {a1, a2};
+    }
+};
+
+// ============================================================================
+// 2. POMOĆNI MODUL ZA STATIČKE MAPE (SmartDigraph & StaticDigraph)
+// ============================================================================
+
+namespace StaticMapModule {
+
+    // Primer kreiranja brze statičke mreže autocesta (StaticDigraph)
+    struct HighwayStaticNetwork {
+        StaticDigraph graph;
+        StaticDigraph::NodeMap<std::string> name;
+        StaticDigraph::ArcMap<double> speedLimit;
+
+        HighwayStaticNetwork(const StaticDigraphReader& reader) 
+            : name(graph), speedLimit(graph) {}
+    };
+
+    // Pomoćna funkcija za izgradnju nepokretne mreže autocesta pomoću SmartDigraph-a ili DigraphBuilder-a
+    void buildHighwayNetwork() {
+        // Izgradnja pomoću SmartDigraph (efikasno građenje bez brisanja)
+        SmartDigraph smartGraph;
+        SmartDigraph::NodeMap<std::string> smartName(smartGraph);
+        
+        SmartDigraph::Node zagreb = smartGraph.addNode();
+        SmartDigraph::Node split = smartGraph.addNode();
+        smartName[zagreb] = "Zagreb (Autocesta)";
+        smartName[split] = "Split (Autocesta)";
+
+        SmartDigraph::Arc A1 = smartGraph.addArc(zagreb, split);
+
+        std::cout << "[StaticMapModule] SmartDigraph uspješno inicijaliziran s " 
+                  << countNodes(smartGraph) << " čvora i " 
+                  << countArcs(smartGraph) << " luka.\n";
+    }
+}
+
+// ============================================================================
+// 3. VIZUALIZACIJA U IMNODES
+// ============================================================================
+
+void RenderDeliveryNetworkInImNodes(DeliveryNetwork& net) {
+    ImNodes::BeginNodeEditor();
+
+    // 1. Iscrtavanje Čvorova
+    for (ListDigraph::NodeIt n(net.graph); n != INVALID; ++n) {
+        int nodeId = net.graph.id(n);
+
+        // Postavljanje početne pozicije na platnu pri prvom renderiranju
+        ImNodes::SetNodeGridSpacePos(nodeId, net.nodePos[n]);
+
+        ImNodes::BeginNode(nodeId);
+            ImNodes::BeginNodeTitleBar();
+                ImTextUnformatted(net.nodeName[n].c_str());
+            ImNodes::EndNodeTitleBar();
+
+            ImNodes::BeginInputAttribute(nodeId * 2);
+                ImGui::Text("Ulaz");
+            ImNodes::EndInputAttribute();
+
+            ImNodes::BeginOutputAttribute(nodeId * 2 + 1);
+                ImGui::Text("Izlaz");
+            ImNodes::EndOutputAttribute();
+        ImNodes::EndNode();
+    }
+
+    // 2. Iscrtavanje Veza / Lukova
+    for (ListDigraph::ArcIt a(net.graph); a != INVALID; ++a) {
+        ListDigraph::Node u = net.graph.source(a);
+        ListDigraph::Node v = net.graph.target(a);
+
+        int arcId = net.graph.id(a);
+        int startPin = net.graph.id(u) * 2 + 1; // Output pin izvorišta
+        int endPin = net.graph.id(v) * 2;       // Input pin odredišta
+
+        // Ako je cesta dvosmjerna (simetrična), izbjegavamo duplicirano iscrtavanje linija
+        // tako da iscrtavamo samo primarni smjer (gdje je u.id < v.id)
+        if (net.isSymmetric[a]) {
+            if (net.graph.id(u) < net.graph.id(v)) {
+                ImNodes::PushColorStyle(ImNodesCol_Link, IM_COL32(0, 255, 128, 255));
+                ImNodes::Link(arcId, startPin, endPin);
+                ImNodes::PopColorStyle();
+            }
+        } else {
+            ImNodes::PushColorStyle(ImNodesCol_Link, IM_COL32(255, 128, 0, 255));
+            ImNodes::Link(arcId, startPin, endPin);
+            ImNodes::PopColorStyle();
+        }
+    }
+
+    ImNodes::EndNodeEditor();
+}
+
+int main() {
+    DeliveryNetwork cityNetwork;
+
+    auto depot = cityNetwork.addLocation("Centralno Skladište", ImVec2(100, 100));
+    auto hubA  = cityNetwork.addLocation("Dostavni Hub A",     ImVec2(400, 100));
+    auto hubB  = cityNetwork.addLocation("Dostavni Hub B",     ImVec2(100, 300));
+    auto zoneC = cityNetwork.addLocation("Krajnja Zona C",     ImVec2(400, 300));
+
+    cityNetwork.addTwoWayRoad(depot, hubA, 5.2);
+    cityNetwork.addOneWayRoad(hubA, zoneC, 2.1);
+    cityNetwork.addTwoWayRoad(depot, hubB, 3.0);
+    cityNetwork.addOneWayRoad(hubB, zoneC, 4.5);
+    StaticMapModule::buildHighwayNetwork();
+
+    std::cout << "Mreža uspješno uspostavljena s " 
+              << countNodes(cityNetwork.graph) << " lokacija i " 
+              << countArcs(cityNetwork.graph) << " usmjerenih cesta.\n";
+
+    return 0;
+}
