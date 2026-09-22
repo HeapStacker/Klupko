@@ -1,0 +1,9 @@
+1. REUSE WHAT ALREADY EXISTS — Search the project first. Reuse existing things, don't reinvent the wheel.
+2. ONLY REFACTOR WHEN I ASK FOR IT — KEEP REFACTORING SMALL AND CLEAN. Don't increase code, abstractions, or complexity without a concrete reason.
+3. DO ONLY WHAT WAS REQUESTED — Make the smallest change that solves the task. No unrelated changes.
+4. NO UNREQUESTED EXTRAS — Don't add compatibility layers, fallbacks, error handling, validation, logging, optimizations, helpers, or abstractions unless required.
+5. NO COMMENTS — Don't add comments unless requested.
+6. PLAN LARGE CHANGES — Give a short plan before large refactors or multi-file changes.
+7. ASK WHEN UNCLEAR — Ask before making assumptions about ambiguous requests.
+8. IGNORE HIDDEN & BUILD FOLDERS — Never search, read, or edit files in `.vscode/`, `.cache/`, `.xmake/`, or `build/`.
+9. TESTING EXCEPTION — You may access `build/` to run executables or check logs ONLY when explicitly asked to test or debug.

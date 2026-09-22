@@ -1,0 +1,25 @@
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 0
+
+BreakBeforeBraces: Attach
+
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Empty
+
+NamespaceIndentation: All
+AccessModifierOffset: -4
+
+IndentPPDirectives: BeforeHash
+PPIndentWidth: 4
+
+EmptyLineAfterAccessModifier: Never
+EmptyLineBeforeAccessModifier: Never
+
+SpaceBeforeParens: ControlStatements
+PointerAlignment: Right
+ReferenceAlignment: Pointer

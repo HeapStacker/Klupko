@@ -1,0 +1,21 @@
+{
+  "recommendations": [
+    "llvm-vs-code-extensions.vscode-clangd",
+    "tboox.xmake-vscode",
+    "vadimcn.vscode-lldb",
+    "Supermaven.supermaven",
+    "shalldie.background",
+    "saoudrizwan.claude-dev",
+    "FanaticPythoner.better-todo-tree",
+    "BeardedBear.beardedicons",
+    "usernamehw.errorlens",
+    "waderyan.gitblame"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.cpptools",
+    "ms-vscode.cpptools-extension-pack",
+    "ms-vscode.cmake-tools",
+    "github.copilot",
+    "github.copilot-chat"
+  ]
+}

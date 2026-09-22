@@ -1,0 +1,4 @@
+**/extern/
+**/build/
+**/.xmake/
+**/compile_commands.json
