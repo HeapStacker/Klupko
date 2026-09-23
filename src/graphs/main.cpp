@@ -22,5 +22,7 @@ int main() {
     // Pronalaženje puta bez definiranja ekstra weight_fn-a
     auto path = g.findShortestPath(zg, sp);
 
+    std::cout << "Path: " << path.total_distance << std::endl;
+
     return 0;
 }
