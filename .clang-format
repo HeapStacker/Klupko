@@ -23,3 +23,5 @@ EmptyLineBeforeAccessModifier: Never
 SpaceBeforeParens: ControlStatements
 PointerAlignment: Right
 ReferenceAlignment: Pointer
+
+SeparateDefinitionBlocks: Always
