@@ -9,54 +9,56 @@
 namespace graph {
 
     template <typename NodeProps>
-    class Graph {
+    class UndirectedGraph {
     public:
+        using Node = typename UndirectedBase::Node;
+        using Edge = typename UndirectedBase::Edge;
         using KeyType = std::decay_t<decltype(KeyExtractor<NodeProps>::get(std::declval<NodeProps>()))>;
         using HeuristicFn = std::function<double(const NodeProps &, const NodeProps &)>;
-        using Path = PathResult<Node, Connection>;
-        using Tree = ShortestPathTree<GraphBase, Node, Connection>;
-        using Flow = MaxFlowResult<GraphBase, Connection>;
+        using Path = PathResult<Node, Edge>;
+        using Tree = ShortestPathTree<UndirectedBase, Node, Edge>;
         using Components = ComponentPartition<Node>;
-        using Postman = PostmanResult<Connection>;
+        using Forest = SpanningForest<Edge>;
+        using Postman = PostmanResult<Edge>;
+        using Flow = MaxFlowResult<UndirectedBase, Edge>;
 
         struct MatrixRepresentation {
             std::vector<KeyType> node_keys;
             std::vector<std::vector<double>> matrix;
         };
 
-        Graph();
-        Graph(const Graph &other);
-        Graph(Graph &&other);
-        Graph &operator=(const Graph &other);
-        Graph &operator=(Graph &&other);
-        ~Graph();
+        UndirectedGraph();
+        UndirectedGraph(const UndirectedGraph &other);
+        UndirectedGraph(UndirectedGraph &&other);
+        UndirectedGraph &operator=(const UndirectedGraph &other);
+        UndirectedGraph &operator=(UndirectedGraph &&other);
+        ~UndirectedGraph();
 
         Node addNode(NodeProps props);
-        Connection addConnection(Node u, Node v, double weight = 1);
+        Edge addEdge(Node u, Node v, double weight = 1);
         void updateNode(Node n, NodeProps props);
         void removeNode(Node n);
-        void removeConnection(Connection a);
+        void removeEdge(Edge e);
 
         Node getNodeByKey(const KeyType &key) const;
         bool hasNodeKey(const KeyType &key) const;
 
         const NodeProps &operator[](Node n) const;
-        double &operator[](Connection a);
-        const double &operator[](Connection a) const;
+        double &operator[](Edge e);
+        const double &operator[](Edge e) const;
 
-        double weight(Connection a) const;
-        double capacity(Connection a) const;
-        double cost(Connection a) const;
-        void setWeight(Connection a, double value);
-        void setCapacity(Connection a, double value);
-        void setCost(Connection a, double value);
-        bool hasReverse(Connection a) const;
+        double weight(Edge e) const;
+        double capacity(Edge e) const;
+        double cost(Edge e) const;
+        void setWeight(Edge e, double value);
+        void setCapacity(Edge e, double value);
+        void setCost(Edge e, double value);
 
         bool valid(Node n) const;
-        bool valid(Connection a) const;
-        Node source(Connection a) const;
-        Node target(Connection a) const;
-        const GraphBase &lemonGraph() const;
+        bool valid(Edge e) const;
+        Node u(Edge e) const;
+        Node v(Edge e) const;
+        const UndirectedBase &lemonGraph() const;
 
         MatrixRepresentation getAdjacencyMatrix(double no_edge_val = std::numeric_limits<double>::infinity()) const;
 
@@ -64,43 +66,38 @@ namespace graph {
                               Node end,
                               ShortestPathAlgorithm algo = ShortestPathAlgorithm::Dijkstra,
                               HeuristicFn heuristic = nullptr) const;
-
         Tree shortestPathTree(Node source, ShortestPathAlgorithm algo = ShortestPathAlgorithm::Dijkstra) const;
 
         AllPairsShortestPathResult<KeyType> getFloydWarshallMatrix() const;
 
-        ArborescenceResult findMinimumSpanningArborescence(Node root) const;
+        Forest findMinimumSpanningForest() const;
+        Components connectedComponents() const;
 
         Flow findMaxFlow(Node source_node, Node sink_node) const;
 
-        bool isAcyclic() const;
-        std::vector<Node> getTopologicalOrder() const;
-        std::vector<Connection> findCycle() const;
-
-        bool isWeaklyConnected() const;
+        bool isConnected() const;
         bool isEulerian() const;
         Postman chinesePostman() const;
-
-        Components stronglyConnectedComponents() const;
 
         template <typename Func>
         void forEachNode(Func func) const;
 
         template <typename Func>
-        void forEachConnection(Func func) const;
+        void forEachEdge(Func func) const;
 
-        Connection findConnection(Node u, Node v) const;
+        Edge findEdge(Node u, Node v) const;
         int nodeCount() const;
-        int arcCount() const;
+        int edgeCount() const;
+
     private:
         struct Core {
-            GraphBase digraph;
-            typename GraphBase::template NodeMap<NodeProps> nodeProps;
-            typename GraphBase::template ArcMap<ConnectionData> connectionProps;
+            UndirectedBase graph;
+            typename UndirectedBase::template NodeMap<NodeProps> nodeProps;
+            typename UndirectedBase::template EdgeMap<ConnectionData> edgeProps;
 
             Core()
-                : nodeProps(digraph),
-                  connectionProps(digraph) {}
+                : nodeProps(graph),
+                  edgeProps(graph) {}
 
             Core(const Core &) = delete;
             Core &operator=(const Core &) = delete;
@@ -111,11 +108,11 @@ namespace graph {
         std::unique_ptr<Core> core;
         std::unordered_map<KeyType, Node> keyToNode;
 
-        GraphBase &base();
-        const GraphBase &base() const;
+        UndirectedBase &base();
+        const UndirectedBase &base() const;
         KeyType getKey(const NodeProps &props) const;
     };
 
 } // namespace graph
 
-#include "Graph.inl"
+#include "UndirectedGraph.inl"
